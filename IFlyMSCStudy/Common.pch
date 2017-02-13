@@ -1,0 +1,23 @@
+//
+//  Common.pch
+//  IFlyMSCStudy
+//
+//  Created by 付宗建 on 17/2/13.
+//  Copyright © 2017年 youran. All rights reserved.
+//
+
+#ifndef Common_pch
+#define Common_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+//屏幕宽高
+#define SCREEN_WIDTH ([UIScreen mainScreen].bounds.size.width)
+#define SCREEN_HEIGHT ([UIScreen mainScreen].bounds.size.height)
+
+#define APPID_VALUE @"58a11788"
+
+
+
+#endif /* Common_pch */
