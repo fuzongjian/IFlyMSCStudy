@@ -19,7 +19,7 @@
 @class IFlyDataUploader;
 @class IFlySpeechRecognizer;
 @class IFlyPcmRecorder;
-@interface ListenVoiceController : UIViewController<IFlySpeechRecognizerDelegate,IFlyRecognizerViewDelegate,UIActionSheetDelegate,IFlyPcmRecorderDelegate>
+@interface ListenVoiceController : UIViewController<IFlySpeechRecognizerDelegate,IFlyRecognizerViewDelegate>
 @property (nonatomic,strong) NSString * pcmFilePath;// 音频文件路径
 @property (nonatomic,strong) IFlySpeechRecognizer * iFlySpeechRecognizer;//不带界面的识别对象
 @property (nonatomic,strong) IFlyRecognizerView * iFlyRecognizerView;// 带界面的识别对象

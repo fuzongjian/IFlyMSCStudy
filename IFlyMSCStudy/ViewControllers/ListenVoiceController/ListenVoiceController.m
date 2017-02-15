@@ -9,7 +9,10 @@
 #import "ListenVoiceController.h"
 
 @interface ListenVoiceController ()
-
+@property (nonatomic,strong) UIButton * right_volum_button;
+@property (nonatomic,strong) UISegmentedControl * language_segment;
+@property (nonatomic,strong) UISegmentedControl * dot_segment;
+@property (nonatomic,strong) UISegmentedControl * view_segment;
 @end
 
 @implementation ListenVoiceController
@@ -21,11 +24,16 @@
 - (void)configListenVoiceUI{
     self.edgesForExtendedLayout = UIRectEdgeNone;
     self.view.backgroundColor = [UIColor blackColor];
+    [self addLabels];
     [self.view addSubview:self.textView];
     [self.view addSubview:self.startRecBtn];
     [self.view addSubview:self.stopRecBtn];
     [self.view addSubview:self.cancelRecBtn];
+    [self.view addSubview:self.language_segment];
+    [self.view addSubview:self.view_segment];
+    [self.view addSubview:self.dot_segment];
     
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.right_volum_button];
     self.uploader = [[IFlyDataUploader alloc] init];
     //录音文件保存位置
     NSArray * paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
@@ -37,7 +45,7 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     // 初始化识别对象
-    [self configRecognizer:NO];
+    [self configRecognizer];
     [_startRecBtn setEnabled:YES];
     
 }
@@ -47,8 +55,26 @@
     [_iFlySpeechRecognizer setParameter:@"" forKey:[IFlySpeechConstant PARAMS]];
     
 }
-- (void)configRecognizer:(BOOL)isView{
-    if (!isView) {// 无界面
+- (void)addLabels{
+    for (int i =0; i < 3; i ++) {
+        UILabel * label = [[UILabel alloc] initWithFrame:CGRectMake(10, 280 + i * 60, 80, 50)];
+        if (i == 0) {
+            label.text = @"语言选择";
+        }else if(i == 1){
+            label.text = @"有无界面";
+        }else{
+            label.text = @"识别标点";
+        }
+        label.textAlignment = NSTextAlignmentCenter;
+        label.textColor = [UIColor blueColor];
+        label.backgroundColor = [UIColor yellowColor];
+        label.layer.cornerRadius = 5;
+        label.layer.masksToBounds = YES;
+        [self.view addSubview:label];
+    }
+}
+- (void)configRecognizer{
+    if (self.view_segment.selectedSegmentIndex == 0) {// 无界面
         if (_iFlySpeechRecognizer == nil) {
             _iFlySpeechRecognizer = [IFlySpeechRecognizer sharedInstance];
             [_iFlySpeechRecognizer setParameter:@"" forKey:[IFlySpeechConstant PARAMS]];
@@ -82,12 +108,12 @@
     }
 }
 - (void)startRecBtnClicked:(UIButton *)sender{
-    NSLog(@"%s",__func__);
+    NSLog(@"%s%ld",__func__,(long)self.language_segment.selectedSegmentIndex);
     [_textView setText:@""];
     [_textView resignFirstResponder];
     self.isCancled = NO;
     if (_iFlySpeechRecognizer == nil) {
-        [self configRecognizer:NO];
+        [self configRecognizer];
     }
     [_iFlySpeechRecognizer cancel];
     // 设置音频来源为麦克风
@@ -105,10 +131,15 @@
 }
 - (void)stopRecBtnClicked:(UIButton *)sender{
     NSLog(@"%s",__func__);
+    [_iFlySpeechRecognizer stopListening];
+    [_textView resignFirstResponder];
 
 }
 - (void)cancleRecBtnClicked:(UIButton *)sender{
     NSLog(@"%s",__func__);
+    self.isCancled = YES;
+    [_iFlySpeechRecognizer cancel];
+    [_textView resignFirstResponder];
 
 }
 - (void)setExclusiveTouchForButtons:(UIView *)view{
@@ -124,12 +155,15 @@
     }
 }
 #pragma mark - IFlySpeechRecognizerDelegate
+- (void)onIFlyRecorderError:(IFlyPcmRecorder *)recoder theError:(int)error{
+    
+}
 /**
  音量回调函数
  volume 0－30
  ****/
 - (void)onVolumeChanged:(int)volume{
-    NSLog(@"%s___%d",__func__,volume);
+    [self.right_volum_button setTitle:[NSString stringWithFormat:@"音量:%d",volume] forState:UIControlStateNormal];
 }
 /**
  开始识别回调
@@ -173,9 +207,9 @@
  results：听写结果
  isLast：表示最后一次
  ****/
-- (void)onResult:(NSArray *)resultArray isLast:(BOOL)isLast{
+- (void) onResults:(NSArray *) results isLast:(BOOL)isLast{
     NSMutableString *resultString = [[NSMutableString alloc] init];
-    NSDictionary *dic = resultArray[0];
+    NSDictionary *dic = results[0];
     for (NSString *key in dic) {
         [resultString appendFormat:@"%@",key];
     }
@@ -263,6 +297,42 @@
     }
     return _cancelRecBtn;
 }
+- (UISegmentedControl *)language_segment{
+    if (_language_segment == nil) {
+        NSArray * items = [NSArray arrayWithObjects:@"粤语",@"普通话",@"英文", nil];
+        _language_segment = [[UISegmentedControl alloc] initWithItems:items];
+        _language_segment.frame = CGRectMake(100, 280, SCREEN_WIDTH - 110, 50);
+        [_language_segment setSelectedSegmentIndex:0];
+    }
+    return _language_segment;
+}
+- (UISegmentedControl *)view_segment{
+    if (_view_segment == nil) {
+        NSArray * items = [NSArray arrayWithObjects:@"有界面",@"无界面", nil];
+        _view_segment = [[UISegmentedControl alloc] initWithItems:items];
+        _view_segment.frame = CGRectMake(100, 340, SCREEN_WIDTH - 110, 50);
+        [_view_segment setSelectedSegmentIndex:0];
+    }
+    return _view_segment;
+}
+- (UISegmentedControl *)dot_segment{
+    if (_dot_segment == nil) {
+        NSArray * items = [NSArray arrayWithObjects:@"有标点",@"无标点", nil];
+        _dot_segment = [[UISegmentedControl alloc] initWithItems:items];
+        _dot_segment.frame = CGRectMake(100, 400, SCREEN_WIDTH - 110, 50);
+        [_dot_segment setSelectedSegmentIndex:0];
+    }
+    return _dot_segment;
+}
+- (UIButton *)right_volum_button{
+    if (_right_volum_button == nil) {
+        _right_volum_button = [UIButton buttonWithType:UIButtonTypeSystem];
+        _right_volum_button.frame = CGRectMake(0, 0, 100, 44);
+        [_right_volum_button setTitle:@"音量:0" forState:UIControlStateNormal];
+    }
+    return _right_volum_button;
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
